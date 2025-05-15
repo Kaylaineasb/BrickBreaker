@@ -14,7 +14,7 @@ public class LevelData
     public int level;
     public int width;
     public int height;
-    public List<int> layout;
+    public BlockData[] layout;
 }
 
 [System.Serializable]
@@ -77,14 +77,14 @@ public class GameManager : MonoBehaviour
     void GenerateLevel(LevelData level)
     {
         var layout = level.layout;
-        int width = level.width;
-        int height = level.height;
 
-        for (int y = 0; y < height; y++)
+        for (int y = 0; y < level.height; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < level.width; x++)
             {
-                
+                int i = y * level.width + x;
+                var data = level.layout[i];
+                Debug.Log(data);
             }
         }
     }
