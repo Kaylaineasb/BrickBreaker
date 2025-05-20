@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Android.Gradle;
 using UnityEngine;
 
 public enum GameState
@@ -14,15 +15,8 @@ public class LevelData
     public int level;
     public int width;
     public int height;
-    public BlockData[] layout;
+    public int[] layout;
 }
-
-[System.Serializable]
-public class BlockData
-{
-    public int t;
-}
-
 public class GameManager : MonoBehaviour
 {
     private GameState m_currentState;
@@ -44,8 +38,10 @@ public class GameManager : MonoBehaviour
                 LoadLevel(m_currentLevel);
                 break;
             case GameState.Win:
+                Debug.Log("Você venceu");
                 break;
             case GameState.GameOver:
+                Debug.Log("Você perdeu");
                 break;
         }
     }
@@ -85,10 +81,12 @@ public class GameManager : MonoBehaviour
                 int i = y * level.width + x;
                 var data = level.layout[i];
                 Debug.Log(data);
+                if (data == 1)
+                {
+                  Instantiate(blockPrefab, new Vector3(x, y, 0), Quaternion.identity);  
+                }
             }
         }
     }
-
-
 
 }
