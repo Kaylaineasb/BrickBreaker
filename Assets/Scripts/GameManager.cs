@@ -90,6 +90,7 @@ public class GameManager : MonoBehaviour
 
     void GenerateLevel(LevelData level)
     {
+        //Limpa os blocos antigos
         foreach (Transform child in transform)
         {
             if (child.CompareTag("Block"))
@@ -99,6 +100,10 @@ public class GameManager : MonoBehaviour
         }
 
         var layout = level.layout;
+
+        //centralizar grid
+        float offsetX = -level.width / 2f + 0.5f;
+        float offsetY = Camera.main.orthographicSize / 2f;
 
         for (int y = 0; y < level.height; y++)
         {
@@ -110,7 +115,8 @@ public class GameManager : MonoBehaviour
                     var data = level.layout[i];
                     if (data == 1)
                     {
-                        GameObject blockInstance = Instantiate(blockPrefab, new Vector3(x, y, 0), Quaternion.identity);
+                        Vector3 pos = new Vector3(x + offsetX, y + offsetY, 0);
+                        GameObject blockInstance = Instantiate(blockPrefab, pos, Quaternion.identity);
                         blockInstance.tag = "Block";
                         blockInstance.transform.SetParent(transform);
                     }
