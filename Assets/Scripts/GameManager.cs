@@ -29,11 +29,12 @@ public class GameManager : MonoBehaviour
     private GameState m_currentState;
 
     private string m_currentLevel = "Level_0";
-    public GameObject blockPrefab;
+    [SerializeField]
+    private GameObject blockPrefab;
 
     private string m_progressFilePath;
-
-    public Ball ball;
+    [SerializeField]
+    private Ball ball;
     private List<GameObject> m_activeBricks = new List<GameObject>();
 
     void Awake()

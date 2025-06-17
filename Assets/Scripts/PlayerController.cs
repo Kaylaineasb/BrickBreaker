@@ -4,7 +4,8 @@ namespace BrickBreaker.Assets.Scripts
 {
     public class PlayerController: MonoBehaviour
     {
-        public float limitX = 7.5f;
+        [SerializeField]
+        private float limitX = 7.5f;
 
         void Update()
         {

@@ -3,27 +3,30 @@ using UnityEngine;
 
 public class Ball : MonoBehaviour
 {
-    //referencia a localização do jogador
-    public Transform playerBar;
-    //velocidade inicial que ela é lançada
-    public float initialSpeed = 10f;
-    //raio da bola
-    public float radius = 0.2f;
-    //ângulo amixo que a bola pode quicar ao atingir o player
-    public float maxBounceAngle = 75f;
+    //Configurações
+    [Header("Parâmetros da Bola")]
+    [Tooltip("A velocidade inicial da bola ao ser lançada.")]
+    [SerializeField] private float initialSpeed = 10f;
+    [Tooltip("O raio da bola, usado para cálculos precisos de colisão.")]
+    [SerializeField] private float radius = 0.2f;
 
-    //direcao e velocidade atual da bola
-    private Vector2 velocity;
-    //lançada ou não
-    private bool isLaunched = false;
+    [Header("Parâmetros de Colisão com o Player")]
+    [Tooltip("O ângulo máximo, em graus, que a bola pode quicar ao atingir a barra do jogador.")]
+    [SerializeField] private float maxBounceAngle = 75f;
+    [Tooltip("O tamanho da caixa de colisão da barra do jogador (definido manualmente para não depender da escala).")]
+    [SerializeField] private Vector2 paddleCollisionSize = new Vector2(2f, 0.5f);
+    [Tooltip("Tempo de espera (em segundos) após uma colisão com a barra para evitar colisões múltiplas.")]
+    [SerializeField] private float collisionCooldown = 0.2f;
 
-    //evita que a bola colida com o player multiplas vezes seguidas
-    private float cooldownTimer = 0f;
-    private const float collisionCooldown = 0.2f;
-    //tamanho da area de colisão
-    public Vector2 paddleCollisionSize = new Vector2(2f, 0.5f);
-
-    private List<GameObject> m_allBricks;
+    [Header("Referências Externas")]
+    [Tooltip("Referência ao Transform da barra do jogador.")]
+    [SerializeField] private Transform playerBar;
+   
+    //estado interno
+    private Vector2 m_velocity; // Vetor que armazena a direção e velocidade atual da bola.
+    private bool m_isLaunched = false; // Flag para controlar se a bola já foi lançada.
+    private float m_cooldownTimer = 0f; // Timer para o cooldown de colisão com a barra.
+    private List<GameObject> m_allBricks; // Lista de todos os blocos do nível atual.
 
     void Start()
     {
@@ -37,9 +40,9 @@ public class Ball : MonoBehaviour
 
     void Update()
     {
-        cooldownTimer -= Time.deltaTime;
+        m_cooldownTimer -= Time.deltaTime;
 
-        if (!isLaunched)
+        if (!m_isLaunched)
         {
             StickToPaddle();// bola presa na barra
             if (Input.GetMouseButtonDown(0)) LaunchBall();// se clicar com o botão, lança a bola
@@ -48,12 +51,13 @@ public class Ball : MonoBehaviour
 
         MoveBall();
         HandleWallCollisions();
-        if (cooldownTimer <= 0f) HandlePaddleCollision();
+        if (m_cooldownTimer <= 0f) HandlePaddleCollision();
 
         if (m_allBricks != null)
         {
             HandleBrickCollisions();
         }
+
     }
 
     //coloca a bola acima do centro da barra do jogador
@@ -69,14 +73,14 @@ public class Ball : MonoBehaviour
     void LaunchBall()
     {
         //bola lançada
-        isLaunched = true;
+        m_isLaunched = true;
         //velocidade inicial, garantindo que seja sempre lançada para cima com uma leve variação aleatória para os lados
-        velocity = new Vector2(Random.Range(-1f, 1f), 1f).normalized * initialSpeed;
+        m_velocity = new Vector2(Random.Range(-1f, 1f), 1f).normalized * initialSpeed;
     }
 
     void MoveBall()
     {
-        transform.position += (Vector3)(velocity * Time.deltaTime);
+        transform.position += (Vector3)(m_velocity * Time.deltaTime);
     }
 
     //definindo as paredes virtuais do jogo
@@ -86,19 +90,19 @@ public class Ball : MonoBehaviour
         if (transform.position.x - radius < -8f)
         {
             transform.position = new Vector3(-8f + radius, transform.position.y, transform.position.z);
-            velocity.x = -velocity.x;
+            m_velocity.x = -m_velocity.x;
         }
         else if (transform.position.x + radius > 8f)
         {
             transform.position = new Vector3(8f - radius, transform.position.y, transform.position.z);
-            velocity.x = -velocity.x;
+            m_velocity.x = -m_velocity.x;
         }
 
         // Colisão com teto
         if (transform.position.y + radius > 5f)
         {
             transform.position = new Vector3(transform.position.x, 5f - radius, transform.position.z);
-            velocity.y = -velocity.y;
+            m_velocity.y = -m_velocity.y;
         }
     }
 
@@ -117,13 +121,13 @@ public class Ball : MonoBehaviour
         Vector2 ballMin = new Vector2(transform.position.x - radius, transform.position.y - radius);
         Vector2 ballMax = new Vector2(transform.position.x + radius, transform.position.y + radius);
 
-        if (velocity.y < 0 &&
+        if (m_velocity.y < 0 &&
             ballMax.x > paddleMin.x &&
             ballMin.x < paddleMax.x &&
             ballMax.y > paddleMin.y &&
             ballMin.y < paddleMax.y)
         {
-            cooldownTimer = collisionCooldown;
+            m_cooldownTimer = collisionCooldown;
 
             // Calcula o ponto de impacto (-1 a 1)
             float hitPoint = (transform.position.x - playerBar.position.x) / (paddleSize.x / 2);
@@ -134,10 +138,10 @@ public class Ball : MonoBehaviour
             Vector2 newDirection = new Vector2(Mathf.Sin(bounceAngle), Mathf.Cos(bounceAngle));
 
             // Mantém a velocidade mas com direção nova
-            velocity = newDirection.normalized * velocity.magnitude;
+            m_velocity = newDirection.normalized * m_velocity.magnitude;
 
             // Garante que está indo para cima
-            if (velocity.y < 0) velocity.y = -velocity.y;
+            if (m_velocity.y < 0) m_velocity.y = -m_velocity.y;
 
             // Reposiciona a bola acima do paddle
             float newY = paddleMax.y + radius + 0.01f; // Pequeno offset extra
@@ -147,9 +151,9 @@ public class Ball : MonoBehaviour
 
     public void ResetBall()
     {
-        isLaunched = false;
-        velocity = Vector2.zero;
-        cooldownTimer = 0f;
+        m_isLaunched = false;
+        m_velocity = Vector2.zero;
+        m_cooldownTimer = 0f;
     }
     void OnDrawGizmos()
     {
@@ -194,11 +198,11 @@ public class Ball : MonoBehaviour
 
                 if (overlapX < overlapY)
                 {
-                    velocity.x = -velocity.x;
+                    m_velocity.x = -m_velocity.x;
                 }
                 else
                 {
-                    velocity.y = -velocity.y;
+                    m_velocity.y = -m_velocity.y;
                 }
 
                 Destroy(brick.gameObject);
