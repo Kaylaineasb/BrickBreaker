@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Ball : MonoBehaviour
@@ -22,9 +23,16 @@ public class Ball : MonoBehaviour
     //tamanho da area de colisão
     public Vector2 paddleCollisionSize = new Vector2(2f, 0.5f);
 
+    private List<GameObject> m_allBricks;
+
     void Start()
     {
         ResetBall(); //estado inicial da bola
+    }
+
+    public void StartLevel(List<GameObject> bricks)
+    {
+        m_allBricks = bricks;
     }
 
     void Update()
@@ -41,6 +49,11 @@ public class Ball : MonoBehaviour
         MoveBall();
         HandleWallCollisions();
         if (cooldownTimer <= 0f) HandlePaddleCollision();
+
+        if (m_allBricks != null)
+        {
+            HandleBrickCollisions();
+        }
     }
 
     //coloca a bola acima do centro da barra do jogador
@@ -93,8 +106,8 @@ public class Ball : MonoBehaviour
     {
         Vector2 paddleSize = paddleCollisionSize;
         Vector2 paddleMin = new Vector2(
-            playerBar.position.x - paddleSize.x /2,
-            playerBar.position.y - paddleSize.y /2
+            playerBar.position.x - paddleSize.x / 2,
+            playerBar.position.y - paddleSize.y / 2
         );
         Vector2 paddleMax = new Vector2(
             playerBar.position.x + paddleSize.x / 2,
@@ -139,16 +152,60 @@ public class Ball : MonoBehaviour
         cooldownTimer = 0f;
     }
     void OnDrawGizmos()
-{
-    // Apenas desenha se o playerBar foi atribuído no Inspector
-    if (playerBar != null)
     {
-        // Pega o tamanho da barra exatamente como no seu cálculo de colisão
-        Vector2 paddleSize = paddleCollisionSize;
+        // Apenas desenha se o playerBar foi atribuído no Inspector
+        if (playerBar != null)
+        {
+            // Pega o tamanho da barra exatamente como no seu cálculo de colisão
+            Vector2 paddleSize = paddleCollisionSize;
 
-        // Desenha um cubo (que vira um retângulo em 2D) com a mesma posição e tamanho da sua caixa de colisão
-        Gizmos.color = Color.red; // Define a cor do desenho para vermelho
-        Gizmos.DrawWireCube(playerBar.position, paddleSize);
+            // Desenha um cubo (que vira um retângulo em 2D) com a mesma posição e tamanho da sua caixa de colisão
+            Gizmos.color = Color.red; // Define a cor do desenho para vermelho
+            Gizmos.DrawWireCube(playerBar.position, paddleSize);
+        }
     }
-}
+
+    void HandleBrickCollisions()
+    {
+        for (int i = m_allBricks.Count - 1; i >= 0; i--)
+        {
+            GameObject brick = m_allBricks[i];
+
+            if (brick == null) continue;
+
+            Vector2 brickPos = brick.transform.position;
+            Vector2 brickSize = brick.transform.localScale;
+
+            float ballLeft = transform.position.x - radius;
+            float ballRight = transform.position.x + radius;
+            float ballTop = transform.position.y + radius;
+            float ballBottom = transform.position.y - radius;
+
+            float brickLeft = brickPos.x - brickSize.x / 2;
+            float brickRight = brickPos.x + brickSize.x / 2;
+            float brickTop = brickPos.y + brickSize.y / 2;
+            float brickBottom = brickPos.y - brickSize.y / 2;
+
+            if (ballRight > brickLeft && ballLeft < brickRight && ballTop > brickBottom && ballBottom < brickTop)
+            {
+                //direção do quique
+                float overlapX = Mathf.Min(ballRight - brickLeft, brickRight - ballLeft);
+                float overlapY = Mathf.Min(ballTop - brickBottom, brickBottom - ballBottom);
+
+                if (overlapX < overlapY)
+                {
+                    velocity.x = -velocity.x;
+                }
+                else
+                {
+                    velocity.y = -velocity.y;
+                }
+
+                Destroy(brick.gameObject);
+                m_allBricks.RemoveAt(i);
+
+                break;
+            }
+        }
+    }
 }

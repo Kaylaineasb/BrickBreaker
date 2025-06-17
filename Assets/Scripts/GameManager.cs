@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.IO;
+using System.Collections.Generic;
 
 public enum GameState
 {
@@ -31,6 +32,9 @@ public class GameManager : MonoBehaviour
     public GameObject blockPrefab;
 
     private string m_progressFilePath;
+
+    public Ball ball;
+    private List<GameObject> m_activeBricks = new List<GameObject>();
 
     void Awake()
     {
@@ -98,9 +102,9 @@ public class GameManager : MonoBehaviour
                 Destroy(child.gameObject);
             }
         }
+        m_activeBricks.Clear();
 
         var layout = level.layout;
-
         //centralizar grid
         float offsetX = -level.width / 2f + 0.5f;
         float offsetY = Camera.main.orthographicSize / 2f;
@@ -119,9 +123,19 @@ public class GameManager : MonoBehaviour
                         GameObject blockInstance = Instantiate(blockPrefab, pos, Quaternion.identity);
                         blockInstance.tag = "Block";
                         blockInstance.transform.SetParent(transform);
+
+                        m_activeBricks.Add(blockInstance);
                     }
                 }
             }
+        }
+        if (ball != null)
+        {
+            ball.StartLevel(m_activeBricks);
+        }
+        else
+        {
+            Debug.LogError("A referência da bola não foi atribuída no GameManager");
         }
     }
 
