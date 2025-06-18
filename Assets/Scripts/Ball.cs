@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Ball : MonoBehaviour
@@ -21,6 +22,8 @@ public class Ball : MonoBehaviour
     [Header("Referências Externas")]
     [Tooltip("Referência ao Transform da barra do jogador.")]
     [SerializeField] private Transform playerBar;
+    [Tooltip("Referência ao GameManager para comunicar eventos como 'perder vida' ou 'vencer'.")]
+    [SerializeField] private GameManager gameManager;
    
     //estado interno
     private Vector2 m_velocity; // Vetor que armazena a direção e velocidade atual da bola.
@@ -58,6 +61,10 @@ public class Ball : MonoBehaviour
             HandleBrickCollisions();
         }
 
+        if (transform.position.y < -6f)
+        {
+            gameManager.OnBallFell();  
+        }
     }
 
     //coloca a bola acima do centro da barra do jogador

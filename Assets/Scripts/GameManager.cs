@@ -35,7 +35,10 @@ public class GameManager : MonoBehaviour
     private string m_progressFilePath;
     [SerializeField]
     private Ball ball;
+    [SerializeField] private UiManager uiManager;
     private List<GameObject> m_activeBricks = new List<GameObject>();
+    private int m_life = 3;
+    
 
     void Awake()
     {
@@ -47,9 +50,10 @@ public class GameManager : MonoBehaviour
     {
         LoadProgress();
         ChangeState(GameState.Playing);
+        uiManager.UpdateLife(m_life);
     }
 
-    void ChangeState(GameState newState)
+    public void ChangeState(GameState newState)
     {
         m_currentState = newState;
 
@@ -108,7 +112,7 @@ public class GameManager : MonoBehaviour
         var layout = level.layout;
         //centralizar grid
         float offsetX = -level.width / 2f + 0.5f;
-        float offsetY = Camera.main.orthographicSize / 2f;
+        float offsetY = Camera.main.orthographicSize /2.5f;
 
         for (int y = 0; y < level.height; y++)
         {
@@ -189,6 +193,22 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.Log("Nenhum arquivo de progresso encontrado. Iniciando com o nível padrão: " + m_currentLevel);
+        }
+    }
+
+    public void OnBallFell()
+    {
+        m_life--;
+        uiManager.UpdateLife(m_life);
+
+        if (m_life > 0)
+        {
+            ball.ResetBall();
+        }
+        else
+        {
+            ChangeState(GameState.GameOver);
+            ball.gameObject.SetActive(false);
         }
     }
 
